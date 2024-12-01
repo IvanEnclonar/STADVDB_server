@@ -1,6 +1,7 @@
 const WebSocket = require('ws');
 const fs = require('fs');
 const mysql = require('mysql2');
+const { syncFragment, syncCentral } = require('./syncs');
 
 // Define WebSocket server ports for each server
 const serverPort = 3000;  // Port for Server 1 (change for other servers)
@@ -162,6 +163,7 @@ const readEntry = (entry) => {
  */
 const updateEntry = (entry) => {
   // Add your update logic here
+  const AppID = entry.AppID;
 };
 
 
