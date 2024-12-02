@@ -1,96 +1,317 @@
-const WebSocket = require('ws');
-const fs = require('fs');
 const mysql = require('mysql2');
+const { syncFragment, syncCentral } = require('./syncs');
+const Queue = require('./queue');
 
-// Define WebSocket server ports for each server
-const serverPort = 3001;  // Port for Server 1 (change for other servers)
-const serverUrls = [
-    'ws://localhost:3000',  // Server 1 itself
-    'ws://localhost:3001',  // Server 2
-    'ws://localhost:3002'   // Server 3
-];
-
-// Create a WebSocket server that listens for incoming messages
-const wss = new WebSocket.Server({ port: serverPort });
-
-wss.on('connection', (ws) => {
-    console.log(`New connection established on Server ${serverPort}`);
-
-    // Handle incoming log messages
-    ws.on('message', (message) => {
-        console.log(`Received log on Server ${serverPort}: ${message}`);
-        // Store logs in a file (this can be replaced with a database)
-        fs.appendFileSync('logs1.txt', `${message}\n`);
-    });
-});
-
-// Function to send log message to other servers
-const sendLogToOtherServers = (logMessage) => {
-    serverUrls.forEach((url) => {
-        const ws = new WebSocket(url);
-
-        ws.on('open', () => {
-            ws.send(logMessage);
-            console.log(`Sent log to ${url}: ${logMessage}`);
-            ws.close();
+const dbQuery = async (sql, qparam) => {
+    return new Promise((resolve, reject) => {
+        const connection = mysql.createConnection({
+            host: 'localhost', // Replace with your host
+            user: 'root', //
+            password: 'password', // Replace with your MySQL password
+            database: 'central', // Replace with your database name
         });
 
-        ws.on('error', (err) => {
-            console.error(`Error sending log to ${url}:`, err);
+        // Connect to the database
+        connection.connect((err) => {
+            if (err) {
+                console.error('Error connecting to the database:', err.message);
+                reject(0);
+            }
+        });
+
+        connection.query(sql, qparam, (err, results) => {
+            if (err) {
+                console.error('Error executing query:', err.message);
+                reject(0);
+            }
+            connection.end();
+            resolve(results);
         });
     });
 };
 
-const connection = mysql.createConnection({
-    host: 'localhost', // Replace with your host
-    user: 'your_username', // Replace with your MySQL username
-    password: 'your_password', // Replace with your MySQL password
-    database: 'my_database', // Replace with your database name
-});
+const readTopEntries = async () => {
+    // returns 0 if there is an error, returns results if successful
+    return new Promise((resolve, reject) => {
+        dbQuery('SELECT AppID, Name, Release_date FROM steamgames ORDER BY Release_date DESC LIMIT 10;', []).then((results) => {
+            resolve(results);
+        }).catch((err) => {
+            console.error(err);
+            reject(0);
+        }
+        );
+    });
+};
 
-// Connect to the database
-connection.connect((err) => {
-    if (err) {
-        console.error('Error connecting to the database:', err.message);
+const readGame = async (entry) => {
+    const AppID = entry.AppID;
+    return new Promise((resolve, reject) => {
+        dbQuery('SELECT * FROM steamgames WHERE AppID = ?;', [AppID]).then((results) => {
+            resolve(results);
+        }).catch((err) => {
+            console.error(err);
+            reject(0);
+        });
+    });
+};
+
+const updateEntry = (sanitizedParam) => {
+    // Add your update logic here
+    const AppID = entry.AppID;
+    const sql = `UPDATE steamgames
+            SET \`Name\` = ?, 
+            \`Release_date\` = ?, 
+            \`Estimated_owners\` = ?, 
+            \`Peak_CCU\` = ?, 
+            \`Required_age\` = ?, 
+            \`Price\` = ?, 
+            \`DiscountDLC_count\` = ?, 
+            \`About_the_game\` = ?, 
+            \`Supported_languages\` = ?, 
+            \`Full_audio_languages\` = ?, 
+            \`Reviews\` = ?, 
+            \`Header_image\` = ?, 
+            \`Website\` = ?, 
+            \`Support_url\` = ?, 
+            \`Support_email\` = ?, 
+            \`Metacritic_score\` = ?, 
+            \`Metacritic_url\` = ?, 
+            \`User_score\` = ?, 
+            \`Positive\` = ?, 
+            \`Negative\` = ?, 
+            \`Score_rank\` = ?, 
+            \`Achievements\` = ?, 
+            \`Recommendations\` = ?, 
+            \`Notes\` = ?, 
+            \`Average_playtime_forever\` = ?, 
+            \`Average_playtime_two_weeks\` = ?, 
+            \`Median_playtime_forever\` = ?, 
+            \`Median_playtime_two_weeks\` = ?, 
+            \`Developers\` = ?, 
+            \`Publishers\` = ?, 
+            \`Categories\` = ?, 
+            \`Genres\` = ?, 
+            \`Tags\` = ?, 
+            \`Screenshots\` = ?, 
+            \`Movies\` = ?
+            WHERE \`AppID\` = ?;
+        `;
+
+    const qparam = [
+        sanitizedParam.Name,
+        sanitizedParam.Release_date,
+        sanitizedParam.Estimated_owners,
+        sanitizedParam.Peak_CCU,
+        sanitizedParam.Required_age,
+        sanitizedParam.Price,
+        sanitizedParam.DiscountDLC_count,
+        sanitizedParam.About_the_game,
+        sanitizedParam.Supported_languages,
+        sanitizedParam.Full_audio_languages,
+        sanitizedParam.Reviews,
+        sanitizedParam.Header_image,
+        sanitizedParam.Website,
+        sanitizedParam.Support_url,
+        sanitizedParam.Support_email,
+        sanitizedParam.Metacritic_score,
+        sanitizedParam.Metacritic_url,
+        sanitizedParam.User_score,
+        sanitizedParam.Positive,
+        sanitizedParam.Negative,
+        sanitizedParam.Score_rank,
+        sanitizedParam.Achievements,
+        sanitizedParam.Recommendations,
+        sanitizedParam.Notes,
+        sanitizedParam.Average_playtime_forever,
+        sanitizedParam.Average_playtime_two_weeks,
+        sanitizedParam.Median_playtime_forever,
+        sanitizedParam.Median_playtime_two_weeks,
+        sanitizedParam.Developers,
+        sanitizedParam.Publishers,
+        sanitizedParam.Categories,
+        sanitizedParam.Genres,
+        sanitizedParam.Tags,
+        sanitizedParam.Screenshots,
+        sanitizedParam.Movies,
+        id
+    ];
+
+
+
+    const connection = mysql.createConnection({
+        host: 'localhost', // Replace with
+        user: 'root', // Replace with your MySQL username
+        password: 'password', // Replace with your MySQL password
+        database: 'central', // Replace with your database name
+    });
+
+    // Connect to the database
+    connection.connect((err) => {
+        if (err) {
+            console.error('Error connecting to the database:', err.message);
+            return 0;
+        }
+        console.log('Connected to the MySQL database!');
+    });
+
+    connection.query(sql, qparam, (err, results) => {
+        if (err) {
+            console.error('Error executing query:', err.message);
+            return 0;
+        }
+        console.log('Query results:', results);
+    });
+    connection.end();
+};
+
+const deleteEntry = async (entry) => {
+    const AppID = entry.AppID;
+    return new Promise((resolve, reject) => {
+        dbQuery('DELETE FROM steamgames WHERE AppID = ?;', [AppID]).then((results) => {
+            syncFragment(1);
+            syncFragment(2);
+            resolve(results);
+        }).catch((err) => {
+            console.error(err);
+            reject(0);
+        });
+    });
+}
+
+const readCount = async () => {
+    return new Promise((resolve, reject) => {
+        dbQuery('SELECT COUNT(*) FROM steamgames;', []).then((results) => {
+            resolve(results);
+        }).catch((err) => {
+            console.error(err);
+            reject(0);
+        });
+    });
+};
+
+
+
+// !SERVER
+const express = require('express');
+const app = express();
+const PORT = 5000;
+const main_server = 'http://localhost:4000';
+
+// Middleware to parse JSON and URL-encoded data
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+
+// POST endpoint
+app.post('/getTopEntries', async (req, res) => {
+    const response = await fetch(`${main_server}/getTopEntries`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+    });
+
+    if (!response.ok) {
+        res.status(500).json({ message: 'Failed to fetch data from main server' });
         return;
+    } else {
+        const rows = await response.json();
+        res.json(rows);
     }
-    console.log('Connected to the MySQL database!');
 });
 
-// Close the connection
-connection.end();
+app.post('/getCount', async (req, res) => {
+    const response = await fetch(`${main_server}/getCount`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+    });
 
-
-// CRUD
-/**
- * TODO: Create function for creating a new entry in the database
- * Communicate with central server to add the entry to its DB
-**/
-connection.query('SELECT * FROM your_table', (err, results) => {
-    if (err) {
-        console.error('Error executing query:', err.message);
+    if (!response.ok) {
+        res.status(500).json({ message: 'Failed to fetch data from main server' });
         return;
+    } else {
+        const rows = await response.json();
+        res.json(rows);
     }
-    console.log('Query results:', results);
 });
 
-// Close the connection
-connection.end();
+app.post('/deleteEntry', async (req, res) => {
+    const response = await fetch(`${main_server}/deleteEntry`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(req.body),
+    });
 
-/**
- * TODO: Create function for reading an entry from the database
- * Check this DB for the entry
- * Communicate with other servers to check their DBs for the entry
- */
+    if (!response.ok) {
+        res.status(500).json({ message: 'Failed to delete entry from main server' });
+        return;
+    } else {
+        const rows = await response.json();
+        res.json(rows);
+    }
+});
 
-/**
- * TODO: Create function for updating an entry in the database
- * Update the entry in this DB
- * Communicate with other servers to update the entry in their DBs
- */
 
-/**
- * TODO: Create function for deleting an entry from the database
- * Delete the entry from this DB
- * Communicate with other servers to delete the entry from their DBs
- */
+app.post('/getSingleGame', async (req, res) => {
+    const response = await fetch(`${main_server}/getSingleGame`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(req.body),
+    });
+
+    if (!response.ok) {
+        res.status(500).json({ message: 'Failed to fetch data from main server' });
+        return;
+    } else {
+        const rows = await response.json();
+        res.json(rows);
+    }
+});
+
+app.post('/updateEntry', async (req, res) => {
+    const response = await fetch(`${main_server}/updateEntry`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(req.body),
+    });
+
+    if (!response.ok) {
+        res.status(500).json({ message: 'Failed to update entry from main server' });
+        return;
+    } else {
+        const rows = await response.json();
+        res.json(rows);
+    }
+});
+
+app.post('/search', async (req, res) => {
+    const response = await fetch(`${main_server}/search`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(req.body),
+    });
+
+    if (!response.ok) {
+        res.status(500).json({ message: 'Failed to fetch data from main server' });
+        return;
+    } else {
+        const rows = await response.json();
+        res.json(rows);
+    }
+});
+
+
+// Start the server
+app.listen(PORT, () => {
+    console.log(`Server running on http://localhost:${PORT}`);
+});
+

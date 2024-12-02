@@ -6,21 +6,21 @@ const syncFragment = async (fragmentID) => {
     const centralConfig = {
         host: 'localhost',
         user: 'root',
-        password: '12345',
+        password: 'password',
         port: 3306,
         database: 'central'
     }
-    
+
     const fragmentConfig = {
         host: 'localhost',
         user: 'root',
-        password: '12345',
+        password: 'password',
         port: 3306,
-        database: fragmentID === 1 ? 'fragment1' : 'fragment1'
+        database: fragmentID === 1 ? 'fragment1' : 'fragment2'
     }
     let central, fragment;
     const logsTable = fragmentID == 1 ? "logs_old_games" : "logs_new_games";
-    
+
     try {
 
         central = await mysql.createConnection(centralConfig);
@@ -222,7 +222,7 @@ const syncFragment = async (fragmentID) => {
 
 }
 
-const syncCentral = async() => {
+const syncCentral = async () => {
     console.log(`\nSyncing Central:`)
 
     central = await mysql.createConnection({
@@ -232,7 +232,7 @@ const syncCentral = async() => {
         port: 3306,
         database: 'central'
     });
-    fragment1= await mysql.createConnection({
+    fragment1 = await mysql.createConnection({
         host: 'localhost',
         user: 'root',
         password: '12345',
@@ -249,14 +249,14 @@ const syncCentral = async() => {
 
 
     try {
-        const fragments = [{'conn': fragment1, 'logsTable': 'logs_old_games'}, {'conn': fragment2, 'logsTable': 'logs_new_games'}]
+        const fragments = [{ 'conn': fragment1, 'logsTable': 'logs_old_games' }, { 'conn': fragment2, 'logsTable': 'logs_new_games' }]
 
         for (const fragment of fragments) {
             console.log(`Checking ${fragment.logsTable}...`)
             const [lastCentralLog] = await central.query(`SELECT * FROM ${fragment.logsTable} ORDER BY \`timestamp\` DESC LIMIT 1`)    // Get the latest log from the fragment node
             const timeOfLastCentralLog = lastCentralLog[0]?.timestamp ?? '1970-01-01 00:00:00'  // If no logs exist, default time to unix epoch
             const [fragmentLogs] = await fragment.conn.query(`SELECT * FROM ${fragment.logsTable} WHERE \`timestamp\` > ?`, [timeOfLastCentralLog])   // Collect all logs from master written AFTER last fragment record
-    
+
             console.log(`Time of last central: ${timeOfLastCentralLog}`)
 
             for (const log of fragmentLogs) {

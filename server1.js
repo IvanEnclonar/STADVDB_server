@@ -1,123 +1,60 @@
-const WebSocket = require('ws');
-const fs = require('fs');
 const mysql = require('mysql2');
 const { syncFragment, syncCentral } = require('./syncs');
+const Queue = require('./queue');
 
-// Define WebSocket server ports for each server
-const serverPort = 3000;  // Port for Server 1 (change for other servers)
-const serverUrls = [
-  'ws://localhost:3000',  // Server 1 itself
-  'ws://localhost:3001',  // Server 2
-  'ws://localhost:3002'   // Server 3
-];
-
-// Create a WebSocket server that listens for incoming messages
-const wss = new WebSocket.Server({ port: serverPort });
-
-wss.on('connection', (ws) => {
-  console.log(`New connection established on Server ${serverPort}`);
-
-  // Handle incoming log messages
-  ws.on('message', (message) => {
-    console.log(`Received log on Server ${serverPort}: ${message}`);
-    // Store logs in a file (this can be replaced with a database)
-    fs.appendFileSync('logs1.txt', `${message}\n`);
-  });
-});
-
-// Function to send log message to other servers
-const sendLogToOtherServers = (logMessage) => {
-  serverUrls.forEach((url) => {
-    const ws = new WebSocket(url);
-
-    ws.on('open', () => {
-      ws.send(logMessage);
-      console.log(`Sent log to ${url}: ${logMessage}`);
-      ws.close();
+const dbQuery = async (sql, qparam) => {
+  return new Promise((resolve, reject) => {
+    const connection = mysql.createConnection({
+      host: 'localhost', // Replace with your host
+      user: 'root', //
+      password: 'password', // Replace with your MySQL password
+      database: 'central', // Replace with your database name
     });
 
-    ws.on('error', (err) => {
-      console.error(`Error sending log to ${url}:`, err);
+    // Connect to the database
+    connection.connect((err) => {
+      if (err) {
+        console.error('Error connecting to the database:', err.message);
+        reject(0);
+      }
+    });
+
+    connection.query(sql, qparam, (err, results) => {
+      if (err) {
+        console.error('Error executing query:', err.message);
+        reject(0);
+      }
+      connection.end();
+      resolve(results);
     });
   });
 };
 
-
-// CRUD
-/**
- * TODO: Create a function to read top 10 entries from the database
- * Read the entries from this DB
- */
-const readTopEntries = () => {
+const readTopEntries = async () => {
   // returns 0 if there is an error, returns results if successful
-
-  const connection = mysql.createConnection({
-    host: 'localhost', // Replace with your host
-    user: 'root', // Replace with your MySQL username
-    password: 'password', // Replace with your MySQL password
-    database: 'central', // Replace with your database name
-  });
-
-  // Connect to the database
-  connection.connect((err) => {
-    if (err) {
-      console.error('Error connecting to the database:', err.message);
-      return 0;
+  return new Promise((resolve, reject) => {
+    dbQuery('SELECT AppID, Name, Release_date FROM steamgames ORDER BY Release_date DESC LIMIT 10;', []).then((results) => {
+      resolve(results);
+    }).catch((err) => {
+      console.error(err);
+      reject(0);
     }
-    console.log('Connected to the MySQL database!');
+    );
   });
-
-  connection.query('SELECT AppID, Name, Release_date FROM steamgames ORDER BY Release_date DESC LIMIT 10', (err, results) => {
-    if (err) {
-      console.error('Error executing query:', err.message);
-      return 0;
-    }
-    return results;
-  });
-
-  connection.end();
 };
 
-/**
- * TODO: Search for an entry in the database
- * Read the entry from this DB
- */
-const readEntry = (entry) => {
+const readGame = async (entry) => {
   const AppID = entry.AppID;
-
-  const connection = mysql.createConnection({
-    host: 'localhost', // Replace with your host
-    user: 'your_username', // Replace with your MySQL username
-    password: 'your_password', // Replace with your MySQL password
-    database: 'my_database', // Replace with your database name
+  return new Promise((resolve, reject) => {
+    dbQuery('SELECT * FROM steamgames WHERE AppID = ?;', [AppID]).then((results) => {
+      resolve(results);
+    }).catch((err) => {
+      console.error(err);
+      reject(0);
+    });
   });
-
-  // Connect to the database
-  connection.connect((err) => {
-    if (err) {
-      console.error('Error connecting to the database:', err.message);
-      return 0;
-    }
-    console.log('Connected to the MySQL database!');
-  });
-
-  connection.query('SELECT * FROM your_table WHERE AppID = ?', [AppID], (err, results) => {
-    if (err) {
-      console.error('Error executing query:', err.message);
-      return 0;
-    }
-    return results;
-  });
-
-  connection.end();
 };
 
-
-/**
- * TODO: Create function for updating an entry in the database
- * Update the entry in this DB
- * Communicate with other servers to update the entry in their DBs
- */
 const updateEntry = (sanitizedParam) => {
   // Add your update logic here
   const AppID = entry.AppID;
@@ -227,47 +164,34 @@ const updateEntry = (sanitizedParam) => {
   connection.end();
 };
 
-
-/**
- * TODO: Create function for deleting an entry from the database
- * Delete the entry from this DB
- * Communicate with other servers to delete the entry from their DBs
- */
-const deleteEntry = (entry) => {
+const deleteEntry = async (entry) => {
   const AppID = entry.AppID;
-
-  const connection = mysql.createConnection({
-    host: 'localhost', // Replace with your host
-    user: 'your_username', // Replace with your MySQL username
-    password: 'your_password', // Replace with your MySQL password
-    database: 'my_database', // Replace with your database name
+  return new Promise((resolve, reject) => {
+    dbQuery('DELETE FROM steamgames WHERE AppID = ?;', [AppID]).then((results) => {
+      syncFragment(1);
+      syncFragment(2);
+      resolve(results);
+    }).catch((err) => {
+      console.error(err);
+      reject(0);
+    });
   });
-
-  // Connect to the database
-  connection.connect((err) => {
-    if (err) {
-      console.error('Error connecting to the database:', err.message);
-      return 0;
-    }
-    console.log('Connected to the MySQL database!');
-  });
-
-  connection.query('DELETE FROM your_table WHERE AppID = ?', [AppID], (err, results) => {
-    if (err) {
-      console.error('Error executing query:', err.message);
-      return 0;
-    }
-    console.log('Query results:', results);
-  });
-
-  connection.end();
-
-  // Send the log to other servers
 }
 
+const readCount = async () => {
+  return new Promise((resolve, reject) => {
+    dbQuery('SELECT COUNT(*) FROM steamgames;', []).then((results) => {
+      resolve(results);
+    }).catch((err) => {
+      console.error(err);
+      reject(0);
+    });
+  });
+};
 
 
-// start express server
+
+// !SERVER
 const express = require('express');
 const app = express();
 const PORT = 4000;
@@ -276,29 +200,94 @@ const PORT = 4000;
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
+//Create queue for processing jobs
+const queue = new Queue();
+
 // POST endpoint
 app.post('/getTopEntries', (req, res) => {
-  const results = readTopEntries();
-  res.json(results);
+  queue.add(async () => {
+    try {
+      const results = await readTopEntries();
+      res.json(results);
+    } catch (err) {
+      console.error(err);
+      res.status(500).json({ message: err.message });
+    }
+  });
 });
 
-app.post('/getEntry', (req, res) => {
-  const entry = req.body;
-  const results = readEntry(entry);
-  res.json(results);
-});
-
-app.post('/updateEntry', (req, res) => {
-  const entry = req.body;
-  const results = updateEntry(entry);
-  res.json(results);
+app.post('/getCount', (req, res) => {
+  queue.add(async () => {
+    try {
+      const results = await readCount();
+      await syncFragment(1);
+      await syncFragment(2);
+      res.json(results);
+    } catch (err) {
+      console.error(err);
+      res.status(500).json({ message: err.message });
+    }
+  });
 });
 
 app.post('/deleteEntry', (req, res) => {
-  const entry = req.body;
-  const results = deleteEntry(entry);
-  res.json(results);
+  queue.add(async () => {
+    try {
+      const entry = req.body;
+      const results = await deleteEntry(entry);
+      await syncFragment(1);
+      await syncFragment(2);
+      res.json(results);
+    } catch (err) {
+      console.error(err);
+      res.status(500).json({ message: err.message });
+    }
+  });
 });
+
+
+app.post('/getSingleGame', (req, res) => {
+  queue.add(async () => {
+    try {
+      const entry = req.body;
+      const results = await readGame(entry);
+      res.json(results);
+    } catch (err) {
+      console.error(err);
+      res.status(500).json({ message: err.message });
+    }
+  });
+});
+
+app.post('/updateEntry', (req, res) => {
+  queue.add(async () => {
+    try {
+      const { sql, qparam } = req.body;
+      const results = await dbQuery(sql, qparam);
+      await syncFragment(1);
+      await syncFragment(2);
+      res.json(results);
+    } catch (err) {
+      console.error(err);
+      res.status(500).json({ message: err.message });
+    }
+  });
+});
+
+app.post('/search', (req, res) => {
+  queue.add(async () => {
+    try {
+      const { query } = req.body;
+      const search = query.slice(0, -1).replace("+", " ");
+      const results = await dbQuery(`SELECT AppID, Name, Release_date FROM steamgames WHERE Name LIKE '%${search}%' OR AppID='${search}';`, []);
+      res.json(results);
+    } catch (err) {
+      console.error(err);
+      res.status(500).json({ message: err.message });
+    }
+  });
+});
+
 
 // Start the server
 app.listen(PORT, () => {
