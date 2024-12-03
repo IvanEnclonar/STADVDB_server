@@ -183,7 +183,7 @@ const app = express();
 const PORT = 5001;
 const main_server = 'http://ccscloud.dlsu.edu.ph:22250';
 const fragment_1 = 'http://ccscloud.dlsu.edu.ph:22260'
-const fragment_2 = '	http://ccscloud.dlsu.edu.ph:22270'
+const fragment_2 = 'http://ccscloud.dlsu.edu.ph:22270'
 
 
 // Middleware to parse JSON and URL-encoded data
