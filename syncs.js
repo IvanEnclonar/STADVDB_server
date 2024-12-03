@@ -10,18 +10,18 @@ const syncFragment = async (fragmentID, callerNode) => {
     if (callerNode == 0) {
         centralHost = 'localhost'
         centralPort = 3306
-        fragmentHost = 'ccscloud.dlsu.edu.ph'
-        fragmentPort = fragmentID === 1 ? 22262 : 22272
+        fragmentHost = fragmentID === 1 ? '10.2.0.226' : '10.2.0.227'
+        fragmentPort = 3306
     } else if (fragmentID == callerNode) {
-        centralHost = 'ccscloud.dlsu.edu.ph'
-        centralPort = 22252
+        centralHost = '10.2.0.225'
+        centralPort = 3306
         fragmentHost = 'localhost'
         fragmentPort = 3306
     } else {
-        centralHost = 'ccscloud.dlsu.edu.ph'
-        centralPort = 22252
-        fragmentHost = 'ccscloud.dlsu.edu.ph'
-        fragmentPort = fragmentID === 1 ? 22262 : 22272
+        centralHost = '10.2.0.225'
+        centralPort = 3306
+        fragmentHost = fragmentID === 1 ? '10.2.0.226' : '10.2.0.227'
+        fragmentPort = 3306
     }
 
     const centralConfig = {
@@ -249,13 +249,13 @@ const syncCentral = async (callerNode) => {
     console.log(`\nSyncing Central:`)
 
 
-    const centralHost = callerNode == 0 ? 'localhost' : 'ccscloud.dlsu.edu.ph'
-    const fragment1Host = callerNode == 1 ? 'localhost' : 'ccscloud.dlsu.edu.ph'
-    const fragment2Host = callerNode == 2 ? 'localhost' : 'ccscloud.dlsu.edu.ph'
+    const centralHost = callerNode == 0 ? 'localhost' : '10.2.0.225'
+    const fragment1Host = callerNode == 1 ? 'localhost' : '10.2.0.226'
+    const fragment2Host = callerNode == 2 ? 'localhost' : '10.2.0.227'
 
-    const centralPort = callerNode == 0 ? 3306 : 22252
-    const fragment1Port = callerNode == 1 ? 3306 : 22262
-    const fragment2Port = callerNode == 2 ? 3306 : 22272
+    const centralPort = 3306
+    const fragment1Port = 3306
+    const fragment2Port = 3306
     
 
     let central, fragment1, fragment2
