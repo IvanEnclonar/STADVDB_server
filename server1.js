@@ -18,8 +18,6 @@ const dbQuery = async (sql, qparam) => {
         reject(0);
       }
     });
-
-    syncCentral()
     connection.query(sql, qparam, (err, results) => {
       if (err) {
         console.error('Error executing query:', err.message);
@@ -28,8 +26,6 @@ const dbQuery = async (sql, qparam) => {
       connection.end();
       resolve(results);
     });
-    syncFragment(1)
-    syncFragment(2)
   });
 };
 
@@ -185,6 +181,7 @@ app.post('/search', (req, res) => {
 
 // Start the server
 app.listen(PORT, () => {
+  syncCentral()
   console.log(`Server running on http://localhost:${PORT}`);
 });
 
