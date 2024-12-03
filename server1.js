@@ -29,6 +29,10 @@ const dbQuery = async (sql, qparam) => {
   });
 };
 
+const manualSync = async () => {
+  await syncCentral()
+} 
+
 const readTopEntries = async () => {
   // returns 0 if there is an error, returns results if successful
   return new Promise((resolve, reject) => {
@@ -92,6 +96,12 @@ app.use(express.urlencoded({ extended: true }));
 
 //Create queue for processing jobs
 const queue = new Queue();
+
+app.post('/sync', async (req, res) => {
+  await manualSync()
+  res.status(200)
+})
+
 
 // POST endpoint
 app.post('/getTopEntries', (req, res) => {

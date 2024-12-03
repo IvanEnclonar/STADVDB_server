@@ -27,10 +27,13 @@ const dbQuery = async (sql, qparam) => {
             connection.end();
             resolve(results);
         });
-        syncFragment(1)
-        syncFragment(2)
     });
 };
+
+
+const manualSync = async () => {
+    await syncFragment(2)
+} 
 
 const readTopEntries = async () => {
     // returns 0 if there is an error, returns results if successful
@@ -188,6 +191,10 @@ app.use(express.urlencoded({ extended: true }));
 
 // POST endpoint
 
+app.post('/sync', async (req, res) => {
+    await manualSync()
+    res.status(200)
+})
 
 
 app.post('/manualGetTopEntries', async (req, res) => {
