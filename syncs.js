@@ -6,7 +6,7 @@ const syncFragment = async (fragmentID) => {
     const centralConfig = {
         host: 'localhost',
         user: 'root',
-        password: '12345',
+        password: 'password',
         port: 3306,
         database: 'central'
     }
@@ -14,7 +14,7 @@ const syncFragment = async (fragmentID) => {
     const fragmentConfig = {
         host: 'localhost',
         user: 'root',
-        password: '12345',
+        password: 'password',
         port: 3306,
         database: fragmentID === 1 ? 'fragment1' : 'fragment2'
     }
@@ -231,21 +231,21 @@ const syncCentral = async () => {
         central = await mysql.createConnection({
             host: 'localhost',
             user: 'root',
-            password: '12345',
+            password: 'password',
             port: 3306,
             database: 'central'
         });
         fragment1 = await mysql.createConnection({
             host: 'localhost',
             user: 'root',
-            password: '12345',
+            password: 'password',
             port: 3306,
             database: 'fragment1'
         });
         fragment2 = await mysql.createConnection({
             host: 'localhost',
             user: 'root',
-            password: '12345',
+            password: 'password',
             port: 3306,
             database: 'fragment2'
         });
@@ -256,12 +256,12 @@ const syncCentral = async () => {
         for (const fragment of fragments) {
             console.log(`Checking ${fragment.logsTable}...`)
             const [lastCentralLog] = await central.query(`SELECT * FROM ${fragment.logsTable} ORDER BY \`timestamp\` DESC LIMIT 1`)    // Get the latest log from the fragment node
-            const logIDOfLastCentralLog = lastCentralLog[0]?.log_id ??  0  // If no logs exist, default to 0
+            const logIDOfLastCentralLog = lastCentralLog[0]?.log_id ?? 0  // If no logs exist, default to 0
             const [fragmentLogs] = await fragment.conn.query(`SELECT * FROM ${fragment.logsTable} WHERE \`log_id\` > ?`, [logIDOfLastCentralLog])   // Collect all logs from master written AFTER last fragment record
 
             combinedLogs = combinedLogs.concat(fragmentLogs)
         }
-        combinedLogs.sort((a,b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime())
+        combinedLogs.sort((a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime())
 
         console.log(`Logs to re-sync: ${combinedLogs.length}`)
 

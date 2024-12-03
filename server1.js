@@ -7,7 +7,7 @@ const dbQuery = async (sql, qparam) => {
     const connection = mysql.createConnection({
       host: 'localhost', // Replace with your host
       user: 'root', //
-      password: '12345', // Replace with your MySQL password
+      password: 'password', // Replace with your MySQL password
       database: 'central', // Replace with your database name
     });
 
@@ -31,7 +31,7 @@ const dbQuery = async (sql, qparam) => {
 
 const manualSync = async () => {
   await syncCentral()
-} 
+}
 
 const readTopEntries = async () => {
   // returns 0 if there is an error, returns results if successful
@@ -98,8 +98,18 @@ app.use(express.urlencoded({ extended: true }));
 const queue = new Queue();
 
 app.post('/sync', async (req, res) => {
-  await manualSync()
-  res.status(200)
+  const response = await syncFragment(1);
+  const response2 = await syncFragment(2);
+
+  let node2 = response === 1 ? "Synced" : "Failed";
+  let node3 = response2 === 1 ? "Synced" : "Failed";
+  let central = "Synced";
+
+  res.status(200).json({
+    node2: node2,
+    node3: node3,
+    central: central
+  });
 })
 
 

@@ -7,7 +7,7 @@ const dbQuery = async (sql, qparam) => {
         const connection = mysql.createConnection({
             host: 'localhost', // Replace with your host
             user: 'root', //
-            password: '12345', // Replace with your MySQL password
+            password: 'password', // Replace with your MySQL password
             database: 'fragment2', // Replace with your database name
         });
 
@@ -33,7 +33,7 @@ const dbQuery = async (sql, qparam) => {
 
 const manualSync = async () => {
     await syncFragment(2)
-} 
+}
 
 const readTopEntries = async () => {
     // returns 0 if there is an error, returns results if successful
@@ -103,43 +103,43 @@ const insertEntry = (sanitizedParam) => {
                     );`
 
     const qparam = [
-                sanitizedParam.AppID,
-                sanitizedParam.Name,
-                sanitizedParam.Release_date,
-                sanitizedParam.Estimated_owners,
-                sanitizedParam.Peak_CCU,
-                sanitizedParam.Required_age,
-                sanitizedParam.Price,
-                sanitizedParam.DiscountDLC_count,
-                sanitizedParam.About_the_game,
-                sanitizedParam.Supported_languages,
-                sanitizedParam.Full_audio_languages,
-                sanitizedParam.Reviews,
-                sanitizedParam.Header_image,
-                sanitizedParam.Website,
-                sanitizedParam.Support_url,
-                sanitizedParam.Support_email,
-                sanitizedParam.Metacritic_score,
-                sanitizedParam.Metacritic_url,
-                sanitizedParam.User_score,
-                sanitizedParam.Positive,
-                sanitizedParam.Negative,
-                sanitizedParam.Score_rank,
-                sanitizedParam.Achievements,
-                sanitizedParam.Recommendations,
-                sanitizedParam.Notes,
-                sanitizedParam.Average_playtime_forever,
-                sanitizedParam.Average_playtime_two_weeks,
-                sanitizedParam.Median_playtime_forever,
-                sanitizedParam.Median_playtime_two_weeks,
-                sanitizedParam.Developers,
-                sanitizedParam.Publishers,
-                sanitizedParam.Categories,
-                sanitizedParam.Genres,
-                sanitizedParam.Tags,
-                sanitizedParam.Screenshots,
-                sanitizedParam.Movies,
-            ];
+        sanitizedParam.AppID,
+        sanitizedParam.Name,
+        sanitizedParam.Release_date,
+        sanitizedParam.Estimated_owners,
+        sanitizedParam.Peak_CCU,
+        sanitizedParam.Required_age,
+        sanitizedParam.Price,
+        sanitizedParam.DiscountDLC_count,
+        sanitizedParam.About_the_game,
+        sanitizedParam.Supported_languages,
+        sanitizedParam.Full_audio_languages,
+        sanitizedParam.Reviews,
+        sanitizedParam.Header_image,
+        sanitizedParam.Website,
+        sanitizedParam.Support_url,
+        sanitizedParam.Support_email,
+        sanitizedParam.Metacritic_score,
+        sanitizedParam.Metacritic_url,
+        sanitizedParam.User_score,
+        sanitizedParam.Positive,
+        sanitizedParam.Negative,
+        sanitizedParam.Score_rank,
+        sanitizedParam.Achievements,
+        sanitizedParam.Recommendations,
+        sanitizedParam.Notes,
+        sanitizedParam.Average_playtime_forever,
+        sanitizedParam.Average_playtime_two_weeks,
+        sanitizedParam.Median_playtime_forever,
+        sanitizedParam.Median_playtime_two_weeks,
+        sanitizedParam.Developers,
+        sanitizedParam.Publishers,
+        sanitizedParam.Categories,
+        sanitizedParam.Genres,
+        sanitizedParam.Tags,
+        sanitizedParam.Screenshots,
+        sanitizedParam.Movies,
+    ];
     return new Promise((resolve, reject) => {
         dbQuery(sql, qparam).then((results) => {
             resolve(results);
@@ -192,8 +192,14 @@ app.use(express.urlencoded({ extended: true }));
 // POST endpoint
 
 app.post('/sync', async (req, res) => {
-    await manualSync()
-    res.status(200)
+    const response = await syncCentral();
+
+    if (response == 1) {
+        return res.status(200).json({ success: true });
+    }
+    else {
+        return res.status(200).json({ success: false });
+    }
 })
 
 
@@ -221,7 +227,7 @@ app.post('/getTopEntries', async (req, res) => {
                 'Content-Type': 'application/json',
             },
         });
-    
+
         if (!response.ok) {
             throw new Error("Main server request failed")
         } else {
@@ -256,7 +262,7 @@ app.post('/getTopEntries', async (req, res) => {
                 'Content-Type': 'application/json',
             },
         });
-    
+
         if (!response.ok) {
             throw new Error("Fragment 1 request failed")
         } else {
@@ -269,7 +275,7 @@ app.post('/getTopEntries', async (req, res) => {
         res.status(500).json({ message: err.message });
     }
 
-    
+
 });
 
 app.post('/manualGetCount', async (req, res) => {
@@ -295,7 +301,7 @@ app.post('/getCount', async (req, res) => {
                 'Content-Type': 'application/json',
             },
         });
-    
+
         if (!response.ok) {
             throw new Error("Main server request failed")
         } else {
@@ -341,7 +347,7 @@ app.post('/getCount', async (req, res) => {
     else
         final_count = fragment1_count ? fragment1_count[0]['COUNT(*)'] : fragment2_count[0]['COUNT(*)']
 
-    return res.json([{'COUNT(*)': final_count}])
+    return res.json([{ 'COUNT(*)': final_count }])
 });
 
 
@@ -486,7 +492,7 @@ app.post('/updateEntry', async (req, res) => {
             },
             body: JSON.stringify(req.body),
         });
-    
+
         if (!response.ok) {
             return res.status(500).json({ message: 'Failed to update entry from main server' });
             return;
@@ -534,7 +540,7 @@ app.post('/updateEntry', async (req, res) => {
             });
         }
 
-        return res.status(200).json({ success: true});
+        return res.status(200).json({ success: true });
 
     } catch (err) {
         console.error(err);
@@ -586,7 +592,7 @@ app.post('/search', async (req, res) => {
         console.log("Searching fragment 2")
         const fragment_2_results = await dbQuery(`SELECT AppID, Name, Release_date FROM steamgames WHERE Name LIKE ? OR AppID = ?;`, [query, query]);
         console.log("Searching fragment 1")
-        const response =  await fetch(`${fragment_1}/manualSearch`, {
+        const response = await fetch(`${fragment_1}/manualSearch`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
