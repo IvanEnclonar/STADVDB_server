@@ -181,9 +181,9 @@ const readCount = async () => {
 const express = require('express');
 const app = express();
 const PORT = 5001;
-const main_server = 'http://ccscloud.dlsu.edu.ph:22250';
-const fragment_1 = 'http://ccscloud.dlsu.edu.ph:22260'
-const fragment_2 = '	http://ccscloud.dlsu.edu.ph:22270'
+const main_server = '10.2.0.225';
+const fragment_1 = '10.2.0.226'
+const fragment_2 = '10.2.0.227'
 
 
 // Middleware to parse JSON and URL-encoded data
