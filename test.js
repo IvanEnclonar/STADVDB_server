@@ -1,15 +1,14 @@
-const WebSocket = require('ws');
-const fs = require('fs');
 const mysql = require('mysql2');
 const { syncFragment, syncCentral } = require('./syncs');
 
 
 // delete on central
 const connection = mysql.createConnection({
-    host: 'localhost', // Replace with
-    user: 'root', // Replace with your MySQL username
+    host: 'ccscloud.dlsu.edu.ph', // Replace with
+    port: 22262, // Replace with your port
+    user: 'username', //
     password: 'password', // Replace with your MySQL password
-    database: 'central', // Replace with your database name
+    database: 'fragment1',
 });
 
 // Connect to the database
@@ -21,7 +20,7 @@ connection.connect((err) => {
     console.log('Connected to the MySQL database!');
 });
 
-connection.query('DELETE FROM steamgames WHERE AppID = 80', (err, results) => {
+connection.query('select * from steamgames where AppID = 10;', (err, results) => {
     if (err) {
         console.error('Error executing query:', err.message);
         return;
@@ -30,8 +29,5 @@ connection.query('DELETE FROM steamgames WHERE AppID = 80', (err, results) => {
 });
 
 connection.end();
-
-// syncFragment('delete', 'central', '1');
-syncFragment(1);
 
 

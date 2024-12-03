@@ -5,8 +5,8 @@ const Queue = require('./queue');
 const dbQuery = async (sql, qparam) => {
     return new Promise((resolve, reject) => {
         const connection = mysql.createConnection({
-            host: 'ccscloud.dlsu.edu.ph', // Replace with your host
-            port: 22272, // Replace with your port
+            host: 'localhost', // Replace with your host
+            port: 3306, // Replace with your port
             user: 'username', //
             password: 'password', // Replace with your MySQL password
             database: 'fragment2', // Replace with your database name
@@ -31,6 +31,10 @@ const dbQuery = async (sql, qparam) => {
     });
 };
 
+
+const manualSync = async () => {
+    await syncFragment(2)
+}
 
 const readTopEntries = async () => {
     // returns 0 if there is an error, returns results if successful
@@ -179,7 +183,7 @@ const app = express();
 const PORT = 5001;
 const main_server = 'http://ccscloud.dlsu.edu.ph:22250';
 const fragment_1 = 'http://ccscloud.dlsu.edu.ph:22260'
-const fragment_2 = 'http://ccscloud.dlsu.edu.ph:22270'
+const fragment_2 = '	http://ccscloud.dlsu.edu.ph:22270'
 
 
 // Middleware to parse JSON and URL-encoded data
@@ -189,7 +193,7 @@ app.use(express.urlencoded({ extended: true }));
 // POST endpoint
 
 app.post('/sync', async (req, res) => {
-    const response = await syncCentral(2);
+    const response = await syncCentral();
 
     if (response == 1) {
         return res.status(200).json({ success: true });

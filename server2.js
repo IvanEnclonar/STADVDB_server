@@ -5,8 +5,8 @@ const Queue = require('./queue');
 const dbQuery = async (sql, qparam) => {
     return new Promise((resolve, reject) => {
         const connection = mysql.createConnection({
-            host: 'ccscloud.dlsu.edu.ph', // Replace with your host
-            port: 22262, // Replace with your port
+            host: 'localhost', // Replace with your host
+            port: 3306, // Replace with your port
             user: 'username', //
             password: 'password', // Replace with your MySQL password
             database: 'fragment1', // Replace with your database name
@@ -303,7 +303,7 @@ app.use(express.urlencoded({ extended: true }));
 // POST endpoint
 
 app.post('/sync', async (req, res) => {
-    const response = await syncCentral(1);
+    const response = await syncCentral();
 
     if (response == 1) {
         return res.status(200).json({ success: true });
