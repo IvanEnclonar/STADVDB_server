@@ -303,7 +303,7 @@ app.use(express.urlencoded({ extended: true }));
 // POST endpoint
 
 app.post('/sync', async (req, res) => {
-    const response = await syncCentral();
+    const response = await syncCentral(1);
 
     if (response == 1) {
         return res.status(200).json({ success: true });

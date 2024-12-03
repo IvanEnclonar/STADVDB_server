@@ -63,8 +63,8 @@ const deleteEntry = async (entry) => {
   const AppID = entry.AppID;
   return new Promise((resolve, reject) => {
     dbQuery('DELETE FROM steamgames WHERE AppID = ?;', [AppID]).then((results) => {
-      syncFragment(1);
-      syncFragment(2);
+      syncFragment(1, 0);
+      syncFragment(2, 0);
       resolve(results);
     }).catch((err) => {
       console.error(err);
@@ -99,8 +99,8 @@ app.use(express.urlencoded({ extended: true }));
 const queue = new Queue();
 
 app.post('/sync', async (req, res) => {
-  const response = await syncFragment(1);
-  const response2 = await syncFragment(2);
+  const response = await syncFragment(1, 0);
+  const response2 = await syncFragment(2, 0);
 
   let node2 = response === 1 ? "Synced" : "Failed";
   let node3 = response2 === 1 ? "Synced" : "Failed";
@@ -131,8 +131,8 @@ app.post('/getCount', (req, res) => {
   queue.add(async () => {
     try {
       const results = await readCount();
-      await syncFragment(1);
-      await syncFragment(2);
+      await syncFragment(1, 0);
+      await syncFragment(2, 0);
       res.json(results);
     } catch (err) {
       console.error(err);
@@ -146,8 +146,8 @@ app.post('/deleteEntry', (req, res) => {
     try {
       const entry = req.body;
       const results = await deleteEntry(entry);
-      await syncFragment(1);
-      await syncFragment(2);
+      await syncFragment(1, 0);
+      await syncFragment(2, 0);
       res.json(results);
     } catch (err) {
       console.error(err);
@@ -175,8 +175,8 @@ app.post('/updateEntry', (req, res) => {
     try {
       const { sql, qparam } = req.body;
       const results = await dbQuery(sql, qparam);
-      await syncFragment(1);
-      await syncFragment(2);
+      await syncFragment(1, 0);
+      await syncFragment(2, 0);
       res.json(results);
     } catch (err) {
       console.error(err);
@@ -202,7 +202,7 @@ app.post('/search', (req, res) => {
 
 // Start the server
 app.listen(PORT, () => {
-  syncCentral()
+  syncCentral(0)
   console.log(`Server running on http://localhost:${PORT}`);
 });
 

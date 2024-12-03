@@ -32,10 +32,6 @@ const dbQuery = async (sql, qparam) => {
 };
 
 
-const manualSync = async () => {
-    await syncFragment(2)
-}
-
 const readTopEntries = async () => {
     // returns 0 if there is an error, returns results if successful
     return new Promise((resolve, reject) => {
@@ -193,7 +189,7 @@ app.use(express.urlencoded({ extended: true }));
 // POST endpoint
 
 app.post('/sync', async (req, res) => {
-    const response = await syncCentral();
+    const response = await syncCentral(2);
 
     if (response == 1) {
         return res.status(200).json({ success: true });

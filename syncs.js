@@ -1,19 +1,40 @@
 const mysql = require('mysql2/promise');
 
-const syncFragment = async (fragmentID) => {
+const syncFragment = async (fragmentID, callerNode) => {
     console.log(`\nSyncing Fragment ${fragmentID}:`)
 
+
+    let centralHost, fragmentHost
+    let centralPort, fragmentPort
+
+    if (callerNode == 0) {
+        centralHost = 'localhost'
+        centralPort = 3306
+        fragmentHost = 'ccscloud.dlsu.edu.ph'
+        fragmentPort = fragmentID === 1 ? 22262 : 22272
+    } else if (fragmentID == callerNode) {
+        centralHost = 'ccscloud.dlsu.edu.ph'
+        centralPort = 22252
+        fragmentHost = 'localhost'
+        fragmentPort = 3306
+    } else {
+        centralHost = 'ccscloud.dlsu.edu.ph'
+        centralPort = 22252
+        fragmentHost = 'ccscloud.dlsu.edu.ph'
+        fragmentPort = fragmentID === 1 ? 22262 : 22272
+    }
+
     const centralConfig = {
-        host: 'ccscloud.dlsu.edu.ph', // Replace with your host
-        port: 22252, // Replace with your port
+        host: centralHost, // Replace with your host
+        port: centralPort, // Replace with your port
         user: 'username', //
         password: 'password', // Replace with your MySQL password
         database: 'central',
     }
 
     const fragmentConfig = {
-        host: 'ccscloud.dlsu.edu.ph', // Replace with your host
-        port: fragmentID === 1 ? 22262 : 22272,
+        host: fragmentHost, // Replace with your host
+        port: fragmentPort,
         user: 'username', //
         password: 'password', // Replace with your MySQL password
         database: 'central',
@@ -224,28 +245,38 @@ const syncFragment = async (fragmentID) => {
 
 }
 
-const syncCentral = async () => {
+const syncCentral = async (callerNode) => {
     console.log(`\nSyncing Central:`)
+
+
+    const centralHost = callerNode == 0 ? 'localhost' : 'ccscloud.dlsu.edu.ph'
+    const fragment1Host = callerNode == 1 ? 'localhost' : 'ccscloud.dlsu.edu.ph'
+    const fragment2Host = callerNode == 2 ? 'localhost' : 'ccscloud.dlsu.edu.ph'
+
+    const centralPort = callerNode == 0 ? 3306 : 22252
+    const fragment1Port = callerNode == 1 ? 3306 : 22262
+    const fragment2Port = callerNode == 2 ? 3306 : 22272
+    
 
     let central, fragment1, fragment2
     try {
         central = await mysql.createConnection({
-            host: 'ccscloud.dlsu.edu.ph', // Replace with your host
-            port: 22252, // Replace with your port
+            host: centralHost, // Replace with your host
+            port: centralPort, // Replace with your port
             user: 'username', //
             password: 'password', // Replace with your MySQL password
             database: 'central',
         });
         fragment1 = await mysql.createConnection({
-            host: 'ccscloud.dlsu.edu.ph', // Replace with your host
-            port: 22262, // Replace with your port
+            host: fragment1Host, // Replace with your host
+            port: fragment1Port, // Replace with your port
             user: 'username', //
             password: 'password', // Replace with your MySQL password
             database: 'fragment1',
         });
         fragment2 = await mysql.createConnection({
-            host: 'ccscloud.dlsu.edu.ph', // Replace with your host
-            port: 22272, // Replace with your port
+            host: fragment2Host, // Replace with your host
+            port: fragment2Port, // Replace with your port
             user: 'username', //
             password: 'password', // Replace with your MySQL password
             database: 'fragment2',
