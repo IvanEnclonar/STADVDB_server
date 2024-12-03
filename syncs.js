@@ -215,10 +215,10 @@ const syncFragment = async (fragmentID) => {
 
     } catch (err) {
         console.log(`Failed to sync fragment ${fragmentID}`)
+        return 0;
     } finally {
         if (central) await central.end();
         if (fragment) await fragment.end();
-        return 0;
     }
 
 }
@@ -445,6 +445,7 @@ const syncCentral = async () => {
 
     } catch (err) {
         console.log(`Failed to sync central`)
+        return 0
     } finally {
         if (central) await central.end();
         if (fragment1) await fragment1.end();
