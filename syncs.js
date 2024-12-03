@@ -4,18 +4,19 @@ const syncFragment = async (fragmentID) => {
     console.log(`\nSyncing Fragment ${fragmentID}:`)
 
     const centralConfig = {
-        host: 'localhost',
-        user: 'root',
-        password: 'password',
-        port: 3306,
-        database: 'central'
+        host: 'ccscloud.dlsu.edu.ph', // Replace with your host
+        port: 22252, // Replace with your port
+        user: 'username', //
+        password: 'password', // Replace with your MySQL password
+        database: 'central',
     }
 
     const fragmentConfig = {
-        host: 'localhost',
-        user: 'root',
-        password: 'password',
-        port: 3306,
+        host: 'ccscloud.dlsu.edu.ph', // Replace with your host
+        port: fragmentID === 1 ? 22262 : 22272,
+        user: 'username', //
+        password: 'password', // Replace with your MySQL password
+        database: 'central',
         database: fragmentID === 1 ? 'fragment1' : 'fragment2'
     }
     let central, fragment;
@@ -229,25 +230,25 @@ const syncCentral = async () => {
     let central, fragment1, fragment2
     try {
         central = await mysql.createConnection({
-            host: 'localhost',
-            user: 'root',
-            password: 'password',
-            port: 3306,
-            database: 'central'
+            host: 'ccscloud.dlsu.edu.ph', // Replace with your host
+            port: 22252, // Replace with your port
+            user: 'username', //
+            password: 'password', // Replace with your MySQL password
+            database: 'central',
         });
         fragment1 = await mysql.createConnection({
-            host: 'localhost',
-            user: 'root',
-            password: 'password',
-            port: 3306,
-            database: 'fragment1'
+            host: 'ccscloud.dlsu.edu.ph', // Replace with your host
+            port: 22262, // Replace with your port
+            user: 'username', //
+            password: 'password', // Replace with your MySQL password
+            database: 'fragment1',
         });
         fragment2 = await mysql.createConnection({
-            host: 'localhost',
-            user: 'root',
-            password: 'password',
-            port: 3306,
-            database: 'fragment2'
+            host: 'ccscloud.dlsu.edu.ph', // Replace with your host
+            port: 22272, // Replace with your port
+            user: 'username', //
+            password: 'password', // Replace with your MySQL password
+            database: 'fragment2',
         });
 
         const fragments = [{ 'conn': fragment1, 'logsTable': 'logs_old_games' }, { 'conn': fragment2, 'logsTable': 'logs_new_games' }]
