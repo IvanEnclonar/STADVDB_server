@@ -291,9 +291,9 @@ const readCount = async () => {
 const express = require('express');
 const app = express();
 const PORT = 5000;
-const main_server = 'http://localhost:4000';
-const fragment_1 = 'http://localhost:5000'
-const fragment_2 = 'http://localhost:5001'
+const main_server = 'http://10.2.0.225:4000';
+const fragment_1 = 'http://10.2.0.226:5000'
+const fragment_2 = 'http://10.2.0.227:5001'
 
 
 // Middleware to parse JSON and URL-encoded data
